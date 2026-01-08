@@ -1,4 +1,23 @@
+# ===========================
+# MediaMTX Configuration
+# ===========================
+
+pathDefaults:
+  record: false
+
+# Define camera streams
 paths:
-  cam:
-    source: udp://127.0.0.1:8002
+  cam01:           # Camera ID
+    source: udp://:8002
+    sourceOnDemand: no
+
+# ---------------------------
+# Recording Settings
+# ---------------------------
+record: yes
+
+# Use %path (camera ID) and date-time for file/folder naming
+recordPath: /recordings/%path/%Y/%m/%d/%H-%M-%S.ts
+recordFormat: mpegts          # Must be 'mpegts' or 'webm'
+recordSegmentDuration: 5m   # 15-minute chunks
 
