@@ -1,0 +1,183 @@
+# services:
+#   camera_publisher:
+#     build:
+#       context: .
+#       dockerfile: docker/Dockerfile
+#     container_name: camera_publisher
+#     network_mode : host
+#     command: >
+#       bash -c "source /opt/ros/humble/setup.bash && source /ros2_video_ws/install/setup.bash && ros2 run video_pub_sub camera_publisher"
+
+#   ros2_to_gstreamer:
+#     build:
+#       context: .
+#       dockerfile: docker/Dockerfile
+#     container_name: ros2_to_gstreamer
+#     network_mode : host
+
+#     command: >
+#       bash -c "source /opt/ros/humble/setup.bash && source /ros2_video_ws/install/setup.bash && ros2 run video_pub_sub ros2_to_gstreamer"
+
+
+
+#   mediamtx:
+#     image: mediamtx:local
+#     network_mode: host
+#     container_name: mediamtx
+#     depends_on:
+#       - ros2_to_gstreamer
+#     volumes:
+#       - /home/girish/Downloads/mediamtx_v1.15.6_linux_amd64/mediamtx.yml:/mediamtx.yml:ro
+#     command: ["mediamtx", "/mediamtx.yml"]
+#     restart: unless-stopped
+
+#   # webrtc-server:
+#   #   build:
+#   #     context: ./webrtc-server
+#   #     dockerfile: Dockerfile
+#   #   network_mode: host
+#   #   container_name: webrtc-server
+#   #   depends_on:
+#   #     - mediamtx
+#   #   restart: unless-stopped
+  
+
+
+
+
+# services:
+#   camera_publisher:
+#     build:
+#       context: .
+#       dockerfile: docker/Dockerfile
+#     container_name: camera_publisher
+#     network_mode: 
+#       - rosnet
+#     command: >
+#       bash -c "source /opt/ros/humble/setup.bash && colcon build && source /ros2_video_ws/install/setup.bash && ros2 run video_pub_sub camera_publisher"
+
+#   ros2_to_gstreamer:
+#     build:
+#       context: .
+#       dockerfile: docker/Dockerfile
+#     container_name: ros2_to_gstreamer
+#     network_mode: 
+#       - rosnet
+    
+#     command: >
+#       bash -c "source /opt/ros/humble/setup.bash && source /ros2_video_ws/install/setup.bash && ros2 run video_pub_sub ros2_to_gstreamer"
+
+#   mediamtx:
+#     image: mediamtx:local
+#     container_name: mediamtx
+#     network_mode: 
+#       - rosnet
+#     depends_on:
+#       - ros2_to_gstreamer
+#     volumes:
+#       - /home/girish/Downloads/mediamtx_v1.15.6_linux_amd64/mediamtx.yml:/mediamtx.yml:ro
+#     command: ["mediamtx", "/mediamtx.yml"]
+#     restart: unless-stopped
+
+
+#   networks:
+#     rosnet:
+#       driver: bridge
+
+
+
+
+# services:
+#   mediamtx:
+#     image: bluenviron/mediamtx:1.15.6
+#     container_name: mediamtx
+#     volumes:
+#       - /home/girish/Downloads/mediamtx_v1.15.6_linux_amd64/mediamtx.yml:/mediamtx.yml:ro
+#       - /home/girish/Videos:/recordings
+#     ports:
+#       - "8554:8554"
+#       - "8889:8889"
+#       - "8000:8000/udp"
+#       - "8001:8001/udp"
+#       - "8002:8002/udp"
+#     networks:
+#       - rosnet
+#     restart: unless-stopped
+
+#   yolo_detector:
+#     build:
+#       context: .
+#       dockerfile: docker/Dockerfile
+#     container_name: yolo_detector
+#     networks:
+#       - rosnet
+#     command: >    
+#       bash -c "source /opt/ros/humble/setup.bash && source /ros2_video_ws/install/setup.bash && ros2 run yolo_detector yolo_detector_node"
+#     depends_on:
+#       - camera_publisher
+#     volumes:
+#       - ./models/yolo:/home/girish/models/yolo
+
+#   ros2_to_gstreamer:
+#     build:
+#       context: .
+#       dockerfile: docker/Dockerfile
+#     container_name: ros2_to_gstreamer
+#     depends_on:
+#       - mediamtx
+#     networks: 
+#       - rosnet
+#     command: >
+#        bash -c "source /opt/ros/humble/setup.bash && source /ros2_video_ws/install/setup.bash && ros2 run video_pub_sub ros2_to_gstreamer --topic /camera/image_detected"
+
+#     restart: always
+
+#   camera_publisher:
+#     build:
+#       context: .
+#       dockerfile: docker/Dockerfile
+#     container_name: camera_publisher
+#     depends_on:
+#       - ros2_to_gstreamer
+#     networks:
+#       - rosnet
+#     command: >
+#        bash -c "source /opt/ros/humble/setup.bash && colcon build && source /ros2_video_ws/install/setup.bash && ros2 run video_pub_sub camera_publisher"
+
+#     restart: always
+
+# networks:
+#   rosnet:
+#     driver: bridge
+services:
+  mediamtx:
+    image: bluenviron/mediamtx:1.15.6
+    container_name: mediamtx
+    volumes:
+      - /home/girish/Downloads/mediamtx_v1.15.6_linux_amd64/mediamtx.yml:/mediamtx.yml:ro
+      - /home/girish/Videos:/recordings
+    ports:
+      - "8554:8554"
+      - "8889:8889"
+      - "8000:8000/udp"
+      - "8001:8001/udp"
+      - "8002:8002/udp"
+    networks:
+      - rosnet
+    restart: unless-stopped
+
+  ros2_all:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: ros2_all
+    networks:
+      - rosnet
+    command: ["/entrypoint.sh"]  # Entry point launches camera_publisher, ros2_to_gstreamer, and yolo_node
+    volumes:
+      - ./models/yolo:/home/girish/models/yolo
+    restart: always
+
+networks:
+  rosnet:
+    driver: bridge
