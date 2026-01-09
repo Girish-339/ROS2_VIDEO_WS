@@ -149,23 +149,60 @@
 # networks:
 #   rosnet:
 #     driver: bridge
+# services:
+#   mediamtx:
+#     image: bluenviron/mediamtx:1.15.6
+#     container_name: mediamtx
+#     volumes:
+#       - mediamtx/mediamtx.yml:ro
+#       - /home/girish/Videos:/recordings
+#     ports:
+#       - "8554:8554"
+#       - "8889:8889"
+#       - "8000:8000/udp"
+#       - "8001:8001/udp"
+#       - "8002:8002/udp"
+#     networks:
+#       - rosnet
+#     restart: unless-stopped
+
+#   ros2_all:
+#     build:
+#       context: .
+#       dockerfile: docker/Dockerfile
+#     container_name: ros2_all
+#     networks:
+#       - rosnet
+#     command: ["/entrypoint.sh"]  # Entry point launches camera_publisher, ros2_to_gstreamer, and yolo_node
+#     volumes:
+#       - ./models/yolo:/home/girish/models/yolo
+#     restart: always
+
+# networks:
+#   rosnet:
+#     driver: bridge
+
+  
+
 services:
+  # ----------------- MediaMTX RTSP Server -----------------
   mediamtx:
     image: bluenviron/mediamtx:1.15.6
     container_name: mediamtx
     volumes:
-      - mediamtx/mediamtx.yml:ro
+      - ./mediamtx/mediamtx.yml:/mediamtx/mediamtx.yml:ro
       - /home/girish/Videos:/recordings
     ports:
-      - "8554:8554"
-      - "8889:8889"
-      - "8000:8000/udp"
+      - "8554:8554"       # RTSP
+      - "8889:8889"       # RTSP web UI
+      - "8000:8000/udp"   # optional UDP ports
       - "8001:8001/udp"
       - "8002:8002/udp"
     networks:
       - rosnet
     restart: unless-stopped
 
+  # ----------------- ROS2 + GStreamer + YOLO -----------------
   ros2_all:
     build:
       context: .
@@ -173,11 +210,15 @@ services:
     container_name: ros2_all
     networks:
       - rosnet
-    command: ["/entrypoint.sh"]  # Entry point launches camera_publisher, ros2_to_gstreamer, and yolo_node
+    depends_on:
+      - mediamtx
+    command: ["/start.sh"]  # Will start MediaMTX (optional), ROS2 nodes, GStreamer, YOLO
     volumes:
       - ./models/yolo:/home/girish/models/yolo
+      - ./src:/ros2_video_ws/src
     restart: always
 
 networks:
   rosnet:
     driver: bridge
+
