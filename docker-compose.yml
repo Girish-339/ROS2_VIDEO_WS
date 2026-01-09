@@ -190,8 +190,8 @@ services:
     image: bluenviron/mediamtx:1.15.6
     container_name: mediamtx
     volumes:
-      - ./mediamtx/mediamtx.yml:/mediamtx/mediamtx.yml:ro
-      - /home/girish/Videos:/recordings
+      - /var/lib/jenkins/workspace/ros2-docker-pipeline1/mediamtx/mediamtx.yml:/mediamtx/mediamtx.yml:ro
+      - /home/girish/Videos:/recordings 
     ports:
       - "8554:8554"       # RTSP
       - "8889:8889"       # RTSP web UI
