@@ -13,9 +13,19 @@ pipeline {
         }
              stage('Clean Old Containers') {
             steps {
-                sh 'docker rm -f mediamtx || true'
+                sh '''
+                # Remove previous MediaMTX container
+                 docker rm -f mediamtx || true
+        
+                 # Remove previous ROS2 container
+                docker rm -f ros2_all || true
+                
+                # Remove any orphaned containers from docker-compose
+                docker compose -f $DOCKER_COMPOSE_FILE down --remove-orphans || true
+                '''
+             }
             }
-        }
+
 
         stage('Build Docker Images') {
             steps {
