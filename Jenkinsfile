@@ -34,6 +34,11 @@ pipeline {
                 sh 'docker-compose logs -f ros2_all'
             }
         }
+        stage('Clean Old Containers') {
+            steps {
+                sh 'docker rm -f mediamtx || true'
+            }
+        }
     }
 
     post {
