@@ -11,6 +11,11 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/Girish-339/ROS2_VIDEO_WS.git'
             }
         }
+             stage('Clean Old Containers') {
+            steps {
+                sh 'docker rm -f mediamtx || true'
+            }
+        }
 
         stage('Build Docker Images') {
             steps {
@@ -34,11 +39,7 @@ pipeline {
                 sh 'docker-compose logs -f ros2_all'
             }
         }
-        stage('Clean Old Containers') {
-            steps {
-                sh 'docker rm -f mediamtx || true'
-            }
-        }
+   
     }
 
     post {
