@@ -190,7 +190,7 @@ services:
     image: bluenviron/mediamtx:1.15.6
     container_name: mediamtx
     volumes:
-      - ./mediamtx/mediamtx.yml:/mediamtx/mediamtx.yml:ro
+      - /home/girish/ros2_video_ws/mediamtx/mediamtx.yml:/mediamtx.yml
       - /home/girish/Videos:/recordings # Adjust this path as needed
     ports:
       - "8554:8554"       # RTSP
