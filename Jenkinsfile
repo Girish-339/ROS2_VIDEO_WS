@@ -1,60 +1,73 @@
 pipeline {
     agent any
 
+    options {
+        disableConcurrentBuilds()
+        timeout(time: 30, unit: 'MINUTES')
+    }
+
+    triggers {
+        cron('5 14 * * *')   // Daily build at ~2 :05 PM
+    }
+
     environment {
-        DOCKER_COMPOSE_FILE = 'docker-compose.yml'
+        COMPOSE_FILE = 'docker-compose.yml'
     }
 
     stages {
+
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/Girish-339/ROS2_VIDEO_WS.git'
+                git branch: 'main',
+                    url: 'https://github.com/Girish-339/ROS2_VIDEO_WS.git'
             }
         }
-             stage('Clean Old Containers') {
+
+        stage('Clean Existing Deployment') {
             steps {
                 sh '''
-                # Remove previous MediaMTX container
-                 docker rm -f mediamtx || true
-        
-                 # Remove previous ROS2 container
-                docker rm -f ros2_all || true
-                
-                # Remove any orphaned containers from docker-compose
-                docker compose -f $DOCKER_COMPOSE_FILE down --remove-orphans || true
+                docker compose -f $COMPOSE_FILE down --remove-orphans || true
+                docker rm -f mediamtx ros2_all || true
                 '''
-             }
-            }
-
-
-        stage('Build Docker Images') {
-            steps {
-                sh 'docker-compose build'
             }
         }
 
-        stage('Deploy Containers') {
+        stage('Build Images') {
             steps {
-                // Stop old containers if any
-                sh 'docker-compose down || true'
-
-                // Start containers
-                sh 'docker-compose up -d'
+                sh '''
+                docker compose -f $COMPOSE_FILE build
+                '''
             }
         }
 
-        stage('Verify') {
+        stage('Deploy') {
             steps {
-                sh 'docker ps'
-                sh 'docker-compose logs -f ros2_all'
+                sh '''
+                docker compose -f $COMPOSE_FILE up -d
+                '''
             }
         }
-   
+
+        stage('Verify Containers') {
+            steps {
+                sh '''
+                docker ps
+                docker compose ps
+                docker compose logs ros2_all --tail=50
+                '''
+            }
+        }
     }
 
     post {
+        success {
+            echo 'Deployment successful'
+        }
+        failure {
+            echo 'Deployment failed'
+        }
         always {
-            echo 'Pipeline finished'
+            sh 'docker system prune -f || true'
         }
     }
 }

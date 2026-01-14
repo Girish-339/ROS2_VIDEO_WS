@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: yolo
+  namespace: video-pipeline
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: yolo
+  template:
+    metadata:
+      labels:
+        app: yolo
+    spec:
+      containers:
+      - name: yolo
+        image: your-yolo-image:latest
+        ports:
+        - containerPort: 5000  # REST / WebSocket API for detections

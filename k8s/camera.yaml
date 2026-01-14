@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ros2-camera
+  namespace: video-pipeline
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ros2-camera
+  template:
+    metadata:
+      labels:
+        app: ros2-camera
+    spec:
+      containers:
+      - name: ros2-camera
+        image: your-ros2-camera-image:latest
+        ports:
+        - containerPort: 9090  # if publishing a topic over TCP/ROS bridge
