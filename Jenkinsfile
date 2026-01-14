@@ -7,7 +7,7 @@ pipeline {
     }
 
     triggers {
-        cron('5 14 * * *')   // Daily build at ~2 :05 PM
+        cron('15 14 * * *')   // Daily build at ~2 :05 PM
     }
 
     environment {
